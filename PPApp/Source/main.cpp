@@ -4,86 +4,111 @@
 #include "Walnut/Image.h"
 #include "Walnut/UI/UI.h"
 
-class ExampleLayer : public Walnut::Layer
+#include "../../vendor/stb_image/stb_image.h"
+
+#include <glm/glm.hpp>
+
+static float Luminance(const glm::vec3& color)
+{
+	return 0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b;
+}
+
+class Editor : public Walnut::Layer
 {
 public:
+	Editor()
+	{
+		int width, height, channels;
+		unsigned char* data = stbi_load("Resource/Images/texture.jpg", &width, &height, &channels, STBI_rgb_alpha);
+
+		m_Data.insert(m_Data.begin(), data, data + width * height * 4);
+
+		stbi_image_free(data);
+
+		m_Image = std::make_shared<Walnut::Image>(width, height, Walnut::ImageFormat::RGBA);
+	}
+
 	virtual void OnUIRender() override
 	{
-		ImGui::Begin("Hello");
-		ImGui::Button("Button");
-		ImGui::End();
+		std::vector<uint8_t> data = m_Data;
 
-		ImGui::ShowDemoWindow();
-
-		UI_DrawAboutModal();
-	}
-
-	void UI_DrawAboutModal()
-	{
-		if (!m_AboutModalOpen)
-			return;
-
-		ImGui::OpenPopup("About");
-		m_AboutModalOpen = ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		if (m_AboutModalOpen)
+		for (size_t i = 0; i < data.size(); i += 4)
 		{
-			auto image = Walnut::Application::Get().GetApplicationIcon();
-			ImGui::Image(image->GetDescriptorSet(), { 48, 48 });
+			uint8_t r = data[i + 0];
+			uint8_t g = data[i + 1];
+			uint8_t b = data[i + 2];
 
-			ImGui::SameLine();
-			Walnut::UI::ShiftCursorX(20.0f);
+			glm::vec3 color = { r / 255.0f, g / 255.0f, b / 255.0f };
+			float luminance = Luminance(color);
 
-			ImGui::BeginGroup();
-			ImGui::Text("Walnut application framework");
-			ImGui::Text("by Studio Cherno.");
-			ImGui::EndGroup();
+			data[i + 0] = glm::step(min, luminance) * glm::step(luminance, max) * 255;
+			data[i + 1] = glm::step(min, luminance) * glm::step(luminance, max) * 255;
+			data[i + 2] = glm::step(min, luminance) * glm::step(luminance, max) * 255;
+			data[i + 3] = 255;
+		}
 
-			if (Walnut::UI::ButtonCentered("Close"))
-			{
-				m_AboutModalOpen = false;
-				ImGui::CloseCurrentPopup();
-			}
+		m_Image->SetData(data.data());
 
-			ImGui::EndPopup();
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+			ImGui::Begin("Viewport");
+
+			uint32_t width = ImGui::GetContentRegionAvail().x;
+			uint32_t height = ImGui::GetContentRegionAvail().y;
+
+			width = std::min(width, m_Image->GetWidth());
+			height = std::min(height, m_Image->GetHeight());
+
+			ImGui::Image(m_Image->GetDescriptorSet(), { (float)width, (float)height });
+
+			ImGui::End();
+			ImGui::PopStyleVar();
+		}
+
+		{
+			ImGui::Begin("Inspector");
+
+			ImGui::SliderFloat("Min", &min, 0.0f, 1.0f);
+			ImGui::SliderFloat("Max", &max, 0.0f, 1.0f);
+
+			ImGui::End();
 		}
 	}
-
-	void ShowAboutModal()
-	{
-		m_AboutModalOpen = true;
-	}
 private:
-	bool m_AboutModalOpen = false;
+	std::shared_ptr<Walnut::Image> m_Image;
+	std::vector<uint8_t> m_Data{};
+
+	float min = 0.0f;
+	float max = 1.0f;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 {
 	Walnut::ApplicationSpecification spec;
-	spec.Name = "Walnut Example";
+	spec.Name = "Post Processor";
 	spec.CustomTitlebar = true;
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	std::shared_ptr<ExampleLayer> exampleLayer = std::make_shared<ExampleLayer>();
+
+	std::shared_ptr<Editor> exampleLayer = std::make_shared<Editor>();
 	app->PushLayer(exampleLayer);
 	app->SetMenubarCallback([app, exampleLayer]()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
+			if (ImGui::MenuItem("Save"))
+			{
+
+			}
+
 			if (ImGui::MenuItem("Exit"))
 			{
 				app->Close();
 			}
-			ImGui::EndMenu();
-		}
 
-		if (ImGui::BeginMenu("Help"))
-		{
-			if (ImGui::MenuItem("About"))
-			{
-				exampleLayer->ShowAboutModal();
-			}
 			ImGui::EndMenu();
 		}
 	});
+
 	return app;
 }
