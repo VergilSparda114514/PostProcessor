@@ -4,7 +4,10 @@
 #include "Walnut/Image.h"
 #include "Walnut/UI/UI.h"
 
-#include "../../vendor/stb_image/stb_image.h"
+#include "stb_image.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 #include <glm/glm.hpp>
 
@@ -74,6 +77,11 @@ public:
 			ImGui::End();
 		}
 	}
+
+	void Save()
+	{
+		stbi_write_png("Resource/Images/texture_out.png", m_Image->GetWidth(), m_Image->GetHeight(), 4, m_Data.data(), m_Image->GetWidth() * 4);
+	}
 private:
 	std::shared_ptr<Walnut::Image> m_Image;
 	std::vector<uint8_t> m_Data{};
@@ -90,15 +98,15 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 
 	Walnut::Application* app = new Walnut::Application(spec);
 
-	std::shared_ptr<Editor> exampleLayer = std::make_shared<Editor>();
-	app->PushLayer(exampleLayer);
-	app->SetMenubarCallback([app, exampleLayer]()
+	std::shared_ptr<Editor> editor = std::make_shared<Editor>();
+	app->PushLayer(editor);
+	app->SetMenubarCallback([app, editor]()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("Save"))
 			{
-
+				editor->Save();
 			}
 
 			if (ImGui::MenuItem("Exit"))

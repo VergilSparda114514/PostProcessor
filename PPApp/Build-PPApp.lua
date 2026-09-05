@@ -11,6 +11,7 @@ project "PostProcessor"
    {
       "../vendor/imgui",
       "../vendor/glfw/include",
+      "../vendor/stb_image",
 
       "../Walnut/Source",
       "../Walnut/Platform/GUI",
