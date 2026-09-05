@@ -1,8 +1,8 @@
 -- premake5.lua
-workspace "WalnutApp"
+workspace "PostProcessor"
    architecture "x64"
    configurations { "Debug", "Release", "Dist" }
-   startproject "WalnutApp"
+   startproject "PostProcessor"
 
    -- Workspace-wide build options for MSVC
    filter "system:windows"
@@ -10,5 +10,5 @@ workspace "WalnutApp"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-include "Build-Walnut-External.lua"
-include "WalnutApp/Build-Walnut-App.lua"
+include "Build-PostProcessor-External.lua"
+include "PPApp/Build-PPApp.lua"

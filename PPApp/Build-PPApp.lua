@@ -1,33 +1,28 @@
-project "Walnut-Headless"
-   kind "StaticLib"
+project "PostProcessor"
+   kind "ConsoleApp"
    language "C++"
    cppdialect "C++20"
    targetdir "bin/%{cfg.buildcfg}"
    staticruntime "off"
 
-   files
-   {
-       "Source/**.h",
-       "Source/**.cpp",
-
-       "Platform/Headless/**.h",
-       "Platform/Headless/**.cpp",
-   }
+   files { "Source/**.h", "Source/**.cpp" }
 
    includedirs
    {
-      "Source",
-      "Platform/Headless",
+      "../vendor/imgui",
+      "../vendor/glfw/include",
 
+      "../Walnut/Source",
+      "../Walnut/Platform/GUI",
+
+      "%{IncludeDir.VulkanSDK}",
       "%{IncludeDir.glm}",
-      "%{IncludeDir.spdlog}",
    }
 
    links
    {
+      "Walnut"
    }
-
-   defines { "WL_HEADLESS" }
 
    targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
    objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
@@ -37,11 +32,7 @@ project "Walnut-Headless"
       defines { "WL_PLATFORM_WINDOWS" }
       buildoptions { "/utf-8" }
 
-   filter "system:linux"
-      systemversion "latest"
-      defines { "WL_PLATFORM_LINUX" }
-
-      filter "configurations:Debug"
+   filter "configurations:Debug"
       defines { "WL_DEBUG" }
       runtime "Debug"
       symbols "On"
@@ -53,6 +44,7 @@ project "Walnut-Headless"
       symbols "On"
 
    filter "configurations:Dist"
+      kind "WindowedApp"
       defines { "WL_DIST" }
       runtime "Release"
       optimize "On"
