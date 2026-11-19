@@ -4,70 +4,51 @@
 #include "Walnut/Image.h"
 #include "Walnut/UI/UI.h"
 
-class ExampleLayer : public Walnut::Layer
+class EditorLayer : public Walnut::Layer
 {
 public:
+	EditorLayer()
+	{
+		m_Image = std::make_unique<Walnut::Image>("../PostApp/Resource/texture.jpg");
+	}
+
+	virtual void OnDetach() override
+	{
+		delete m_Image.release();
+	}
+
 	virtual void OnUIRender() override
 	{
-		ImGui::Begin("Hello");
-		ImGui::Button("Button");
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+		ImGui::Begin("Viewport");
+
+		ImGui::Image(m_Image->GetDescriptorSet(), { static_cast<float>(m_Image->GetWidth()), static_cast<float>(m_Image->GetHeight()) });
+
 		ImGui::End();
+		ImGui::PopStyleVar();
 
-		ImGui::ShowDemoWindow();
+		ImGui::Begin("Composer");
 
-		UI_DrawAboutModal();
-	}
 
-	void UI_DrawAboutModal()
-	{
-		if (!m_AboutModalOpen)
-			return;
 
-		ImGui::OpenPopup("About");
-		m_AboutModalOpen = ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		if (m_AboutModalOpen)
-		{
-			auto image = Walnut::Application::Get().GetApplicationIcon();
-			ImGui::Image(image->GetDescriptorSet(), { 48, 48 });
-
-			ImGui::SameLine();
-			Walnut::UI::ShiftCursorX(20.0f);
-
-			ImGui::BeginGroup();
-			ImGui::Text("Walnut application framework");
-			ImGui::Text("by Studio Cherno.");
-			ImGui::EndGroup();
-
-			if (Walnut::UI::ButtonCentered("Close"))
-			{
-				m_AboutModalOpen = false;
-				ImGui::CloseCurrentPopup();
-			}
-
-			ImGui::EndPopup();
-		}
-	}
-
-	void ShowAboutModal()
-	{
-		m_AboutModalOpen = true;
+		ImGui::End();
 	}
 private:
-	bool m_AboutModalOpen = false;
+	std::unique_ptr<Walnut::Image> m_Image = nullptr;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 {
 	Walnut::ApplicationSpecification spec;
-	spec.Name = "Walnut Example";
+	spec.Name = "Post Processor";
 	spec.CustomTitlebar = true;
 	spec.UseDockspace = true;
 	spec.CenterWindow = true;
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	std::shared_ptr<ExampleLayer> exampleLayer = std::make_shared<ExampleLayer>();
-	app->PushLayer(exampleLayer);
-	app->SetMenubarCallback([app, exampleLayer]()
+	std::shared_ptr<EditorLayer> editorLayer = std::make_shared<EditorLayer>();
+	app->PushLayer(editorLayer);
+	app->SetMenubarCallback([app, editorLayer]()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
@@ -77,15 +58,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 			}
 			ImGui::EndMenu();
 		}
-
-		if (ImGui::BeginMenu("Help"))
-		{
-			if (ImGui::MenuItem("About"))
-			{
-				exampleLayer->ShowAboutModal();
-			}
-			ImGui::EndMenu();
-		}
 	});
+
 	return app;
 }
