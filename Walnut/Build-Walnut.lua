@@ -7,11 +7,11 @@ project "Walnut"
 
    files
    {
-       "Source/**.h",
-       "Source/**.cpp",
+      "Source/**.h",
+      "Source/**.cpp",
 
-       "Platform/GUI/**.h",
-       "Platform/GUI/**.cpp",
+      "Platform/GUI/**.h",
+      "Platform/GUI/**.cpp",
    }
 
    includedirs
@@ -30,10 +30,10 @@ project "Walnut"
 
    links
    {
-       "ImGui",
-       "GLFW",
+      "ImGui",
+      "GLFW",
 
-       "%{Library.Vulkan}",
+      "%{Library.Vulkan}",
    }
 
    targetdir ("../../bin/" .. outputdir .. "/%{prj.name}")
